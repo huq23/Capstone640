@@ -1,0 +1,188 @@
+---
+title: "English Learners Status in Oregon"
+author: Nafisul Huq
+output: 
+  flexdashboard::flex_dashboard:
+    theme:
+      bg: "white"
+      fg: "black" 
+      primary: "#00796B"
+    orientation: rows
+    vertical_layout: scroll
+---
+
+```{r}
+library(readr)
+library(tidyverse)
+library(purrr)
+library(sf)
+library(tigris)
+library(leaflet) 
+library(tmap)
+library(flexdashboard)
+library(ggplot2)
+library(ggExtra)
+library(grid)
+library(plotly)
+library(leaflet)
+library(viridis)
+```
+
+Overview {data-orientation=rows}
+=======================================
+Sidebar Title {.sidebar data-width=450}
+---------------------------------------
+
+
+### **Understanding English Learner Enrollment in Oregon (2009–2014)**
+
+
+**English Language Learners (ELL) are students who require additional support in acquiring English proficiency while navigating their academic curriculum. Understanding where EL students are concentrated, how their numbers have changed over time, and what factors influence their enrollment is essential for policymakers and educators working to provide equitable educational opportunities.**
+
+**This dashboard explores trends in EL student enrollment across Oregon's school districts from 2009 to 2014. It examines the relationship between EL populations and key demographic factors, including urban vs. rural district differences and the link between socioeconomic status (free lunch eligibility) and EL enrollment.**
+<br>
+</br>
+
+
+
+### Research Questions
+**This analysis focuses on two key questions:**
+<br>
+</br>
+**1. How have EL student enrollment trends changed over time in Oregon?**
+<br>
+</br>
+**2. How do factors like economic disadvantage and district location (urban vs. rural) influence EL enrollment?**
+
+<br>
+</br>
+
+
+
+Row {data-height=800}
+-----------------------------------------
+
+
+
+
+### **Trends in English Learner Enrollment in Oregon (2009–2013)**
+
+
+This section presents a longitudinal analysis of the total number of English Learner (EL) students enrolled across school districts in Oregon. Monitoring these trends helps stakeholders understand changes in EL populations over time, potentially informing resource allocation, support services, and educational policy decisions.
+
+```{r, include=FALSE}
+
+
+
+data_oregon <- read_csv("C:/Users/Huq/Desktop/EDLD640-Capstone/Capstone640/data_oregon.csv")
+```
+
+
+```{r, include=FALSE}
+data_oregon <- data_oregon %>%
+  mutate(leaname = case_when(
+    leaname == "GREATER ALBANY PUBLIC SD 8J"  ~ "GREATER ALBANY SD 8J",
+    leaname == "ATHENA-WESTON SD 29RJ"  ~ "ATHENA-WESTON SD 29J",
+    leaname == "MT ANGEL SD 91"  ~ "MOUNT ANGEL SD 91",
+    leaname == "UKIAH SD 80R"  ~ "UKIAH SD 80",
+    leaname == "UMATILLA SD 6R"  ~ " UMATILLA SD 6",
+    leaname == "WEST LINN-WILSONVILLE SD 3J"  ~ "WEST LINN SD 3J",
+    leaname == "ST PAUL SD 45"  ~ "ST. PAUL SD 45",
+    leaname == "ST HELENS SD 502"  ~ "ST. HELENS SD 502",
+    leaname == "BROOKINGS-HARBOR SD 17C"  ~ "BROOKINGS-HARBOR SD 17",
+    leaname == "BEND-LAPINE ADMINISTRATIVE SD 1"  ~ "BEND-LA PINE ADMINISTRATIVE SD 1",
+    leaname == "BLACHLY SD 90"  ~ "BLACHLY SD 090",
+    leaname == "PINE EAGLE SD 61"  ~ "PINE-EAGLE SD 61",
+    leaname == "PORT ORFORD-LANGLOIS SD 2CJ"  ~ "PORT ORFORD-LANGLOIS SD 2J",
+    leaname == "ONTARIO SD 8C"  ~ "ONTARIO SD 8",
+    leaname == "MEDFORD SD 549C"  ~ "MEDFORD SD 549",
+    leaname == "MILTON-FREEWATER UNIFIED SD 7"  ~ "MILTON-FREEWATER SD 7",
+    leaname == "HOOD RIVER COUNTY SD"  ~ "HOOD RIVER COUNTY SD 1",
+    leaname == "GRESHAM-BARLOW SD 10J"  ~ "GRESHAM-BARLOW SD 1J",
+    leaname == "LAKE COUNTY SD 7"  ~ "LAKEVIEW SD 7",
+    leaname == "SOUTH LANE SD 45J3"  ~ "SOUTH LANE SD 45J",
+    leaname == "YAMHILL CARLTON SD 1"  ~ "YAMHILL-CARLTON SD 1",
+    leaname == "NORTH WASCO COUNTY SD 21"  ~ "NORTH WASCO SD 21",
+    leaname == "IONE SD R2"  ~ "IONE SD 2",
+    leaname == "SHERMAN COUNTY SD"  ~ "SHERMAN SD 1",
+    leaname == "THREE RIVERS/JOSEPHINE COUNTY SD"  ~ "THREE RIVERS SD",
+    #leaname == " UMATILLA SD 6"  ~ " UMATILLA SD 6",
+    leaname == "DOUGLAS COUNTY SD 4" ~ "HARNEY COUNTY SD",
+    TRUE ~ leaname
+  ))
+
+```
+
+```{r, include=FALSE}
+oregon_ell <- data_oregon %>%
+  group_by(leaid,year) %>%
+  summarise(ell  = first(ell), .groups = "drop")
+
+
+oregon_ell_distribution <- oregon_ell %>%
+  group_by(year) %>%
+  summarise(total_ell = sum(ell, na.rm = TRUE)) %>%
+  rename(c(Year = year, 'Total EL Student' = total_ell))
+
+
+```
+
+
+
+```{r, include=FALSE}
+p1 <- ggplot(oregon_ell_distribution, aes(x = Year, y = `Total EL Student`)) +
+  geom_line(color = "#00796B", size = 1.2) +  # Teal line for consistency
+  geom_point(shape=21, color = "black", fill= "#D81B60", size = 4, stroke=1) +   # Magenta for contrast & visibility
+  labs(title = "EL Student Distribution in Oregon by Year",
+       x = "Year",
+       y = "Total EL Students") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(color = "#00796B", size = 14, face = "bold"),  # Matching title color
+    axis.text = element_text(color = "black"),  # Keeping text readable
+    axis.title = element_text(color = "#00796B", face = "bold")  # Matching axis labels
+  )
+
+ggplotly(p1)
+
+```
+
+```{r}
+p1 <- ggplot(oregon_ell_distribution, aes(x = Year, y = `Total EL Student`)) +
+  geom_line(color = "#009688", size = 1.2) +  # Soft teal (lighter than #00796B)
+  geom_point(fill = "#FFC107", size = 4, color = "black", stroke=0.5, shape=21) +   # Soft golden yellow for contrast
+  labs(title = "EL Student Distribution in Oregon by Year",
+       x = "Year",
+       y = "Total EL Students") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(color = "#009688", size = 14, face = "bold"),  # Soft teal title
+    axis.text = element_text(color = "black"),  # Keeping text readable
+    axis.title = element_text(color = "#009688", face = "bold")  # Matching axis labels
+  )
+
+ggplotly(p1)  %>% layout(height = 500)
+
+```
+
+
+Row {data-height=300}
+-----------------------------------------
+### Data Description
+
+This dashboard leverages publicly available data from the Stanford Education Data Archive (SEDA), provided by the [Stanford Education Opportunity Project](https://edopportunity.org) . The dataset includes school district-level demographic and performance indicators, allowing for a detailed examination of English Learner (EL) student enrollment trends in Oregon from 2009 to 2014.
+<br>
+</br>
+Through interactive visualizations—including line graphs, bar charts, and spatial maps—this dashboard tracks changes in EL enrollment across urban and rural school districts, as well as its correlation with socioeconomic factors such as free lunch eligibility. These insights provide valuable context for educators, policymakers, and researchers working to understand how demographic disparities impact EL student distribution and educational opportunities across Oregon.
+<br>
+</br>
+
+
+
+
+
+
+
+
+
+
