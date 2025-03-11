@@ -179,6 +179,419 @@ Through interactive visualizations—including line graphs, bar charts, and spat
 
 
 
+#  Area type 
+
+**How Do Urban and Rural Districts Compare?**
+<br>
+</br>
+This section compares EL student enrollment in urban vs. rural school districts, showing the differences in student populations.
+<br>
+</br>
+
+```{r, include=FALSE}
+oregon_urban <- data_oregon %>%
+  group_by(leaid,year) %>%
+  summarise(urban  = first(urban), .groups = "drop")  
+
+```
+
+```{r,include=FALSE}
+
+
+# Join the two datasets by leaid and year
+oregon_ell_urban <- oregon_ell %>%
+  full_join(oregon_urban, by = c("leaid", "year"))
+
+
+
+```
+
+```{r,include=FALSE}
+
+
+# Aggregate EL student count by year and urban/rural classification
+oregon_ell_urban_summary <- oregon_ell_urban %>%
+  group_by(year, urban) %>%
+  summarise(total_ell = sum(ell, na.rm = TRUE), .groups = "drop")
+
+
+
+# Convert urban to a factor with correct labels and drop unused levels
+oregon_ell_urban_summary$urban <- factor(oregon_ell_urban_summary$urban, 
+                                         levels = c(0, 1), 
+                                         labels = c("Rural", "Urban"))
+
+# Ensure no extra levels are present
+oregon_ell_urban_summary <- na.omit(oregon_ell_urban_summary)
+
+oregon_ell_urban_summary <-oregon_ell_urban_summary %>%
+  rename(c( Year              = year, 
+            Student = total_ell,
+            Area             = urban))
+```
+
+
+```{r, echo=FALSE}
+# Plot the data
+p2 <- ggplot(oregon_ell_urban_summary, aes(x = Year, y = Student, fill = Area)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("Rural" = "#1f77b4", "Urban" = "#ff7f0e")) +
+  labs(title = "EL Student Distribution by Urban & Rural Areas",
+       x = "Year",
+       y = "Total EL Students",
+       fill = "Area Type") +
+  theme_minimal()
+
+ggplotly(p2)
+
+```
+
+<br>
+</br>
+The bar chart consistently shows that urban districts have a significantly higher number of EL students compared to rural districts. Although both urban and rural EL enrollments fluctuate slightly over time, the urban EL student population remains dominant throughout. This suggests that EL students are more concentrated in urban areas, likely due to larger immigrant populations and better access to language support programs in city school districts.
+<br>
+</br>
+
+
+```{r}
+p3 <- ggplot(oregon_ell_urban_summary, aes(x = Year, y = Student, color = Area, group = Area)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2) +
+  labs(title = "Trend of EL Students in Urban vs. Rural Areas",
+       x = "Year",
+       y = "Total EL Students",
+       color = "Urban/Rural") +
+  theme_minimal()
+
+ggplotly(p3)
+
+```
+<br>
+</br>
+This line graph confirms that urban districts maintain a steady EL student population, whereas rural districts show more variation. The EL student population in urban areas remains relatively stable, while rural districts experience a slight decline over time. This could be due to demographic shifts, with families moving to urban centers for better job opportunities and educational resources.
+<br>
+</br>
+
+Row {data-height=400}
+-----------------------------------------
+
+### Tab
+> This visualization offers 
+
+
+#  Socioeconomic Factors & EL Students
+
+Economic Disadvantage & EL Enrollment
+
+This section examines how free lunch eligibility (a proxy for economic status) relates to EL student distribution.
+
+```{r, include=FALSE}
+oregon_frl <- data_oregon %>%
+  group_by(leaid,year) %>%
+  summarise(perfrl  = first(perfrl)*100, .groups = "drop")
+
+
+# Join the two datasets by leaid and year
+oregon_frl <- oregon_ell %>%
+  full_join(oregon_frl, by = c("leaid", "year"))
+
+
+```
+
+```{r}
+oregon_frl %>%
+  group_by(year) %>%
+  summarise(avg_perfrel = mean(perfrl, na.rm = TRUE),
+            avg_ell = mean(ell, na.rm = TRUE)) %>%
+  pivot_longer(cols = c(avg_perfrel, avg_ell), names_to = "Variable", values_to = "Value") %>%
+  ggplot(aes(x = year, y = Value, color = Variable)) +
+  geom_line(size = 1.2) +
+  labs(title = "Trend of Free Lunch Eligibility and ELL Students Over Time",
+       x = "Year",
+       y = "Percentage / Count",
+       color = "Variable") +
+  theme_minimal()
+
+```
+
+The graph presents two overlapping trends:
+
+Free lunch eligibility (%) remains relatively high across all years, indicating that a large proportion of students in Oregon come from low-income backgrounds.
+EL student numbers, on the other hand, show a decline over time, reinforcing the trend seen in the first graph.
+This suggests that although economic hardship persists, the EL student population is shrinking. One possible explanation is that some EL students may be transitioning out of EL classification faster, while overall immigration trends could also be changing.
+```{r}
+oregon_frl <- oregon_frl %>%
+  mutate(perfrel_category = cut(perfrl, 
+                                breaks = c(0, 25, 50, 75, 100), 
+                                labels = c("Low (0-25%)", "Medium (26-50%)", 
+                                           "High (51-75%)", "Very High (76-100%)"),
+                                include.lowest = TRUE))
+
+ggplot(oregon_frl, aes(x = perfrel_category, y = ell, fill = perfrel_category)) +
+  stat_summary(fun = mean, geom = "bar", color = "black") +
+  labs(title = "Average ELL Students by Free Lunch Eligibility Categories",
+       x = "Free Lunch Eligibility (%)",
+       y = "Average ELL Students") +
+  scale_fill_viridis_d() +
+  theme_minimal()
+
+```
+
+
+```{r, include=FALSE}
+
+
+oregon_race <- data_oregon %>%
+  group_by(leaid,leaname,year) %>%
+  summarise( white           = sum(wht), 
+             black           = sum(blk),
+             hispanic        = sum(hsp),
+             asian           = sum(asn),
+             native_american = sum(ind),
+             total_enrolment = sum(totenrl),
+             .groups         = "drop") 
+
+
+# Joining EL data with race
+
+
+oregon_race <- left_join(oregon_race, oregon_ell, by = c('leaid','year'))
+districts <- st_read("C:/Users/Huq/Desktop/EDLD640-Capstone/Capstone640/gz_2010_41_970_00_500k-20250311T050443Z-001/gz_2010_41_970_00_500k/gz_2010_41_970_00_500k.shp")
+
+districts$NAME <- toupper(districts$NAME)
+
+districts <- districts %>%
+  rename(leaname = NAME ) 
+  
+  
+districts1 <- districts %>%
+  select(leaname,CENSUSAREA,geometry)
+
+districts1$leaname <- gsub("SCHOOL DISTRICT", "SD", districts1$leaname, ignore.case = TRUE)
+
+
+districts1 <- districts1 %>%
+  mutate(leaname = case_when(
+    leaname == "REMAINDER OF OREGON"  ~ "HARNEY COUNTY SD" ,
+    leaname == "UMATILLA SD 6" ~ " UMATILLA SD 6" ,
+    leaname == "SD NOT DEFINED"  ~ "PINE CREEK SD 5" ,
+    leaname == "OREGON TRAIL SD 46"  ~ "SUNTEX SD 10" ,
+    TRUE ~ leaname
+  ))
+
+
+oregon_race <- oregon_race %>%
+  mutate(leaname = case_when(
+    leaname == "JUNTURA SD 12"  ~ "MCDERMITT SD 51" ,
+    leaname == "FRENCHGLEN SD 16" ~ "SILVER FALLS SD 4J" ,
+    leaname == "DIAMOND SD 7"  ~ "DAYS CREEK SD 15" ,
+    leaname == "DREWSEY SD 13" ~ "ROSEBURG SD 4" ,
+    TRUE ~ leaname
+  ))
+# Create a color palette with bins
+#pal <- colorBin(palette = "YlOrRd",  # Yellow-Orange-Red scale
+               # domain = oregon_race09$ell, bins = bins)
+
+
+
+```
+
+
+
+```{r, eval=FALSE}
+
+#comm <- intersect(oregon_race09$leaname,districts1$leaname)
+oregon_race9 <- oregon_race %>%
+  filter(year == 2009)
+
+oregon_race10 <- oregon_race %>%
+  filter(year == 2010)
+
+oregon_race11 <- oregon_race %>%
+  filter(year == 2011)
+
+oregon_race12 <- oregon_race %>%
+  filter(year == 2012)
+
+oregon_race13 <- oregon_race %>%
+  filter(year == 2013)
+
+oregon_race14 <- oregon_race %>%
+  filter(year == 2014)
+
+
+
+
+
+# Get district names from both datasets
+districts_shape <- unique(districts1$leaname)
+districts_race09 <- unique(oregon_race_filtered$leaname)
+
+# Identify uncommon districts
+unmatched_in_race09 <- setdiff(districts_shape, districts_race09)
+unmatched_in_shape <- setdiff(districts_race09, districts_shape)
+
+# Display the names clearly
+cat("Districts in shapefile not in race09 data:\n")
+print(unmatched_in_race09)
+
+cat("\nDistricts in race09 data not in shapefile:\n")
+print(unmatched_in_shape)
+
+
+
+
+
+```
+
+
+
+
+
+Row {data-height=550}
+-----------------------------------------
+###  Description
+
+Understanding the Economic Context of English Learners in Oregon
+This visualization examines the relationship between free lunch eligibility and the number of English Language Learner (ELL) students across school districts in Oregon. Free lunch eligibility serves as a proxy for economic disadvantage, providing insights into how socioeconomic factors impact ELL populations.
+
+<br>
+</br>
+
+**Higher ELL Concentration in Economically Disadvantaged Districts**
+
+Districts where 76-100% of students qualify for free lunch have the highest number of ELL students.
+This trend suggests that ELL populations are more concentrated in lower-income communities.
+
+<br>
+</br>
+
+**Wealthier Districts Have Fewer ELL Students**
+
+School districts with 0-25% free lunch eligibility have significantly fewer ELL students.
+This pattern highlights a demographic divide where ELL students are less prevalent in wealthier areas.
+
+<br>
+</br>
+
+**Middle-Tier Districts Show Varied ELL Counts**
+
+Districts in the 26-50% and 51-75% free lunch categories show moderate ELL numbers, reinforcing that ELL students are often present in economically mixed communities.
+
+
+
+This suggests a strong correlation between economic disadvantage and higher EL student enrollment, reinforcing the idea that many EL students come from economically disadvantaged backgrounds. It also highlights the need for additional support services in lower-income districts where EL populations are concentrated.
+
+
+
+
+
+
+
+
+
+
+Column
+-----------------------------------------
+### Tab
+
+
+Column {data-height=500}
+-----------------------------------------
+
+### Tab
+
+
+
+
+
+
+
+
+
+
+
+
+
+Map {data-orientation=rows}
+==============================
+
+```{r, echo=FALSE}
+options(tigris_use_cache = TRUE)
+
+# Define Oregon state boundary
+oregon_boundary <- states(cb = TRUE) %>%
+  filter(STUSPS == "OR")
+
+# Filter race data for years 2009 to 2014
+oregon_race_filtered <- oregon_race %>%
+  filter(year >= 2009 & year <= 2014)
+
+# Merge with district shapefile
+oregon_race_merged <- full_join(districts1, oregon_race_filtered, by = "leaname")
+
+# Define color palette based on ELL students
+pal <- colorNumeric(palette = "viridis", domain = oregon_race_merged$ell, reverse = TRUE)
+
+# Create base leaflet map
+map <- leaflet(options = leafletOptions(zoomControl = FALSE, dragging = FALSE, attributionControl = FALSE)) %>%
+  addProviderTiles("CartoDB.Positron") %>%  # White background
+  addPolygons(
+    data = oregon_boundary,
+    color = "black", weight = 2, fillOpacity = 0,
+    highlightOptions = highlightOptions(weight = 3, color = "black", bringToFront = TRUE),
+    group = "Oregon Boundary"
+  )
+
+# Add year-wise layers
+for (yr in 2009:2014) {
+  layer_data <- oregon_race_merged %>%
+    filter(year == yr)
+
+  map <- map %>%
+    addPolygons(
+      data = layer_data,
+      fillColor = ~pal(ell),
+      color = "gray", weight = 0.5,  # Softer borders
+      fillOpacity = 0.85, smoothFactor = 1,
+      highlightOptions = highlightOptions(weight = 2, color = "black", bringToFront = TRUE),
+      popup = ~paste0(
+        "<b>", leaname, " (", yr, ")</b><br>",
+        "Black Students: ", formatC(black, format = "d", big.mark = ","), "<br>",
+        "White Students: ", formatC(white, format = "d", big.mark = ","), "<br>",
+        "Hispanic Students: ", formatC(hispanic, format = "d", big.mark = ","), "<br>",
+        "ELL Students: ", formatC(ell, format = "d", big.mark = ",")
+      ),
+      group = as.character(yr)  # Assign each layer to a year
+    )
+}
+
+# Add layer control for years
+map <- map %>%
+  addLayersControl(
+    baseGroups = as.character(2009:2014),
+    overlayGroups = c("Oregon Boundary"),
+    options = layersControlOptions(collapsed = FALSE)
+  ) %>%
+  addLegend(
+    pal = pal, values = oregon_race_merged$ell,
+    title = "English Language Learners",
+    position = "topright",
+    labFormat = labelFormat(big.mark = ","),
+    opacity = 1
+  ) %>%
+  setView(lng = -120.5542, lat = 43.8041, zoom = 6)  # Centered & fixed on Oregon
+
+# Print the map
+map
+
+```
+
+
+
+
+
+
 
 
 
