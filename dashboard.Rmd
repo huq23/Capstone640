@@ -188,6 +188,10 @@ This section compares EL student enrollment in urban vs. rural school districts,
 <br>
 </br>
 
+Column {data-height=450}
+-----------------------------------------
+### Figure 1
+
 ```{r, include=FALSE}
 oregon_urban <- data_oregon %>%
   group_by(leaid,year) %>%
@@ -235,7 +239,7 @@ oregon_ell_urban_summary <-oregon_ell_urban_summary %>%
 # Plot the data
 p2 <- ggplot(oregon_ell_urban_summary, aes(x = Year, y = Student, fill = Area)) +
   geom_bar(stat = "identity", position = "dodge") +
-  scale_fill_manual(values = c("Rural" = "#1f77b4", "Urban" = "#ff7f0e")) +
+  scale_fill_manual(values = c("Rural" = "#009688", "Urban" = "#FFC107")) +
   labs(title = "EL Student Distribution by Urban & Rural Areas",
        x = "Year",
        y = "Total EL Students",
@@ -246,12 +250,9 @@ ggplotly(p2)
 
 ```
 
-<br>
-</br>
-The bar chart consistently shows that urban districts have a significantly higher number of EL students compared to rural districts. Although both urban and rural EL enrollments fluctuate slightly over time, the urban EL student population remains dominant throughout. This suggests that EL students are more concentrated in urban areas, likely due to larger immigrant populations and better access to language support programs in city school districts.
-<br>
-</br>
 
+
+### Figure 2
 
 ```{r}
 p3 <- ggplot(oregon_ell_urban_summary, aes(x = Year, y = Student, color = Area, group = Area)) +
@@ -266,17 +267,20 @@ p3 <- ggplot(oregon_ell_urban_summary, aes(x = Year, y = Student, color = Area, 
 ggplotly(p3)
 
 ```
+
+Row {data-height=550}
+-----------------------------------------
 <br>
 </br>
+The bar chart consistently shows that urban districts have a significantly higher number of EL students compared to rural districts. Although both urban and rural EL enrollments fluctuate slightly over time, the urban EL student population remains dominant throughout. This suggests that EL students are more concentrated in urban areas, likely due to larger immigrant populations and better access to language support programs in city school districts.
+<br>
+</br>
+
 This line graph confirms that urban districts maintain a steady EL student population, whereas rural districts show more variation. The EL student population in urban areas remains relatively stable, while rural districts experience a slight decline over time. This could be due to demographic shifts, with families moving to urban centers for better job opportunities and educational resources.
 <br>
 </br>
 
-Row {data-height=400}
------------------------------------------
 
-### Tab
-> This visualization offers 
 
 
 #  Socioeconomic Factors & EL Students
@@ -284,6 +288,11 @@ Row {data-height=400}
 Economic Disadvantage & EL Enrollment
 
 This section examines how free lunch eligibility (a proxy for economic status) relates to EL student distribution.
+
+Column {data-height=450}
+-----------------------------------------
+
+### Figure 1
 
 ```{r, include=FALSE}
 oregon_frl <- data_oregon %>%
@@ -314,11 +323,11 @@ oregon_frl %>%
 
 ```
 
-The graph presents two overlapping trends:
 
-Free lunch eligibility (%) remains relatively high across all years, indicating that a large proportion of students in Oregon come from low-income backgrounds.
-EL student numbers, on the other hand, show a decline over time, reinforcing the trend seen in the first graph.
-This suggests that although economic hardship persists, the EL student population is shrinking. One possible explanation is that some EL students may be transitioning out of EL classification faster, while overall immigration trends could also be changing.
+
+
+### Figure 2
+
 ```{r}
 oregon_frl <- oregon_frl %>%
   mutate(perfrel_category = cut(perfrl, 
@@ -336,6 +345,8 @@ ggplot(oregon_frl, aes(x = perfrel_category, y = ell, fill = perfrel_category)) 
   theme_minimal()
 
 ```
+
+
 
 
 ```{r, include=FALSE}
@@ -448,15 +459,20 @@ print(unmatched_in_shape)
 
 
 
-Row {data-height=550}
+Row {data-height=800}
 -----------------------------------------
 ###  Description
 
-Understanding the Economic Context of English Learners in Oregon
-This visualization examines the relationship between free lunch eligibility and the number of English Language Learner (ELL) students across school districts in Oregon. Free lunch eligibility serves as a proxy for economic disadvantage, providing insights into how socioeconomic factors impact ELL populations.
+
+
+**Understanding the Economic Context of English Learners in Oregon**
+The above visualizations examine the relationship between free lunch eligibility and the number of English Language Learner (ELL) students across school districts in Oregon. Free lunch eligibility serves as a proxy for economic disadvantage, providing insights into how socioeconomic factors impact ELL populations.
 
 <br>
 </br>
+Free lunch eligibility (%) remains relatively high across all years, indicating that a large proportion of students in Oregon come from low-income backgrounds.
+EL student numbers, on the other hand, show a decline over time, reinforcing the trend seen in the first graph.
+This suggests that although economic hardship persists, the EL student population is shrinking. One possible explanation is that some EL students may be transitioning out of EL classification faster, while overall immigration trends could also be changing.
 
 **Higher ELL Concentration in Economically Disadvantaged Districts**
 
@@ -479,27 +495,42 @@ This pattern highlights a demographic divide where ELL students are less prevale
 Districts in the 26-50% and 51-75% free lunch categories show moderate ELL numbers, reinforcing that ELL students are often present in economically mixed communities.
 
 
-
 This suggests a strong correlation between economic disadvantage and higher EL student enrollment, reinforcing the idea that many EL students come from economically disadvantaged backgrounds. It also highlights the need for additional support services in lower-income districts where EL populations are concentrated.
 
 
 
 
-
-
-
-
-
-
-Column
+Row {data-height=800}
 -----------------------------------------
+### Regression
+
+```{r}
+p1 <- ggplot(oregon_frl, aes(x = perfrl, y = ell)) +
+  geom_point(alpha = 0.5, color = "#009688") + # Teal-colored points for visibility
+  geom_smooth(method = "lm", color = "#FFC107",size = 1.2, se = FALSE) + # Magenta regression line with confidence interval
+  labs(
+    title = "Correlation between EL Enrollment and Free Lunch Eligibility",
+    x = "Free Lunch Eligibility (%)",
+    y = "Total EL Students"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.line = element_line(size = 1, color = "black"),  # Thick black axis border
+    axis.text = element_text(size = 12, color = "black"),   # Adjust axis text size
+    axis.title = element_text(size = 14, face = "bold")     # Bold axis labels
+  )
+
+
+ggplotly(p1) %>% layout(height = 600)
+
+```
+
+Column {data-height=100}
+-----------------------------------------
+
 ### Tab
 
-
-Column {data-height=500}
------------------------------------------
-
-### Tab
+This scatter plot shows the relationship between **Free Lunch Eligibility (%)**, a proxy for economic disadvantage, and **Total EL Students** across school districts in Oregon. While there is a weak positive correlation, indicating that districts with higher free lunch eligibility tend to have more EL students, the trend is not consistent across all districts. A significant number of districts with low free lunch eligibility also have low EL enrollment, whereas some districts with moderate to high economic disadvantage exhibit a sharp increase in EL student counts. The overall distribution suggests that **factors beyond economic disadvantage**, such as **urbanization, immigration patterns, and district-level policies**, may influence EL student enrollment.
 
 
 
@@ -513,8 +544,19 @@ Column {data-height=500}
 
 
 
-Map {data-orientation=rows}
-==============================
+
+
+
+
+
+
+
+
+
+
+
+Map {data-navmenu="Race"}
+=======================================
 
 ```{r, echo=FALSE}
 options(tigris_use_cache = TRUE)
@@ -586,6 +628,87 @@ map <- map %>%
 map
 
 ```
+
+Graph {data-orientation=rows data-navmenu="Race"}
+==============================
+
+Column {data-height=450}
+-----------------------------------------
+
+### Figure 1
+
+```{r}
+# Calculate proportion of each racial group in the total student population
+oregon_race <- oregon_race %>%
+  mutate(
+    prop_hispanic = hispanic / total_enrolment * 100,
+    prop_white = white / total_enrolment * 100,
+    prop_black = black / total_enrolment * 100,
+    prop_asian = asian / total_enrolment * 100,
+    prop_native_american = native_american / total_enrolment * 100
+  )
+
+# Scatter Plot: Hispanic Proportion vs. EL Enrollment
+p_race_scatter <- ggplot(oregon_race, aes(x = prop_hispanic, y = ell)) +
+  geom_point(alpha = 0.5, color = "#FFC107") +  # Scatter plot points
+  geom_smooth(method = "lm", color = "#009688", size = 1.5, se = FALSE) +  # Regression line
+  labs(title = "Relationship Between Hispanic Student Proportion and EL Enrollment",
+       x = "Hispanic Student Population (%)",
+       y = "Total EL Students") +
+  theme_minimal() +
+  theme(
+    axis.line = element_line(size = 1.5, color = "black"),  # Thick axis borders
+    axis.text = element_text(size = 12, color = "black"),   # Readable text
+    axis.title = element_text(size = 14, face = "bold")     # Bold labels
+  )
+
+ggplotly(p_race_scatter)
+
+
+```
+
+### Figure 2
+
+```{r}
+# Define EL enrollment categories and remove NA values
+oregon_race <- oregon_race %>%
+  mutate(ell_category = ifelse(ell >= median(ell, na.rm = TRUE), "High EL Enrollment", "Low EL Enrollment")) %>%
+  filter(!is.na(ell_category))  # Remove NA categories
+
+# Summarize racial composition by EL category
+race_summary <- oregon_race %>%
+  group_by(ell_category) %>%
+  summarise(
+    White = mean(white / total_enrolment * 100, na.rm = TRUE),
+    Black = mean(black / total_enrolment * 100, na.rm = TRUE),
+    Hispanic = mean(hispanic / total_enrolment * 100, na.rm = TRUE),
+    Asian = mean(asian / total_enrolment * 100, na.rm = TRUE),
+    Native_American = mean(native_american / total_enrolment * 100, na.rm = TRUE)
+  ) %>%
+  pivot_longer(cols = White:Native_American, names_to = "Race", values_to = "Percentage")
+
+# Plot Bar Chart
+p_race_bar <- ggplot(race_summary, aes(x = Race, y = Percentage, fill = ell_category)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  scale_fill_manual(values = c("High EL Enrollment" = "#009688", "Low EL Enrollment" = "#FFc107")) +
+  labs(title = "Racial Composition in High vs. Low EL Enrollment Districts",
+       x = "Race",
+       y = "Average Student Percentage (%)",
+       fill = "EL Enrollment Level") +
+  theme_minimal() +
+  theme(
+    axis.line = element_line(size = 1.5, color = "black"),
+    axis.text = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, face = "bold")
+  )
+
+ggplotly(p_race_bar)
+
+
+```
+
+
+
 
 
 
