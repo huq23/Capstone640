@@ -30,7 +30,7 @@ library(viridis)
 
 Overview {data-orientation=rows}
 =======================================
-Sidebar Title {.sidebar data-width=450}
+Sidebar Title {.sidebar data-width=480}
 ---------------------------------------
 
 
@@ -45,7 +45,7 @@ Sidebar Title {.sidebar data-width=450}
 
 
 
-### Research Questions
+### **Research Questions**
 **This analysis focuses on two key questions:**
 <br>
 </br>
@@ -57,6 +57,17 @@ Sidebar Title {.sidebar data-width=450}
 <br>
 </br>
 
+#### **Data Description**
+
+**This dashboard leverages publicly available data from the Stanford Education Data Archive (SEDA), provided by the [Stanford Education Opportunity Project](https://edopportunity.org) . The dataset includes school district-level demographic and performance indicators, allowing for a detailed examination of English Learner (EL) student enrollment trends in Oregon from 2009 to 2014.**
+<br>
+</br>
+**Through interactive visualizations—including line graphs, bar charts, and spatial maps—this dashboard tracks changes in EL enrollment across urban and rural school districts, as well as its correlation with socioeconomic factors such as free lunch eligibility. These insights provide valuable context for educators, policymakers, and researchers working to understand how demographic disparities impact EL student distribution and educational opportunities across Oregon.**
+
+<br>
+<p style="text-align:center; font-size:12px; color:gray;">  
+&copy; 2025 Nafisul Huq, University of Oregon. All rights reserved.  
+</p>
 
 
 Row {data-height=800}
@@ -156,9 +167,10 @@ p1 <- ggplot(oregon_ell_distribution, aes(x = Year, y = `Total EL Student`)) +
        y = "Total EL Students") +
   theme_minimal() +
   theme(
-    plot.title = element_text(color = "#009688", size = 14, face = "bold"),  # Soft teal title
-    axis.text = element_text(color = "black"),  # Keeping text readable
-    axis.title = element_text(color = "#009688", face = "bold")  # Matching axis labels
+    axis.line = element_line(size = 1, color = "black"), 
+    plot.title = element_text(color = "#009688", size = 14, face = "bold"),  
+    axis.text = element_text(color = "black"),  
+    axis.title = element_text(color = "#009688", face = "bold")  
   )
 
 ggplotly(p1)  %>% layout(height = 500)
@@ -166,29 +178,24 @@ ggplotly(p1)  %>% layout(height = 500)
 ```
 
 
-Row {data-height=300}
------------------------------------------
-### Data Description
-
-This dashboard leverages publicly available data from the Stanford Education Data Archive (SEDA), provided by the [Stanford Education Opportunity Project](https://edopportunity.org) . The dataset includes school district-level demographic and performance indicators, allowing for a detailed examination of English Learner (EL) student enrollment trends in Oregon from 2009 to 2014.
-<br>
-</br>
-Through interactive visualizations—including line graphs, bar charts, and spatial maps—this dashboard tracks changes in EL enrollment across urban and rural school districts, as well as its correlation with socioeconomic factors such as free lunch eligibility. These insights provide valuable context for educators, policymakers, and researchers working to understand how demographic disparities impact EL student distribution and educational opportunities across Oregon.
-<br>
-</br>
 
 
 
 #  Area type 
 
-**How Do Urban and Rural Districts Compare?**
-<br>
-</br>
-This section compares EL student enrollment in urban vs. rural school districts, showing the differences in student populations.
-<br>
-</br>
+### **<font color="#009688">Urban vs. Rural EL Enrollment: Understanding Geographic Disparities</font>** 
 
-Column {data-height=450}
+English Learner (EL) student enrollment varies significantly between urban and rural school districts, influenced by demographic distribution and economic factors. Understanding these patterns is essential for policy design and resource allocation, ensuring equitable educational opportunities for EL students across different regions.
+<br>
+This section examines:
+<br>
+**Where EL students are concentrated –** Are EL students primarily enrolled in urban schools, or is there a significant presence in rural districts?
+<br>
+**How enrollment trends differ over time –** Are there noticeable shifts in EL student distribution between urban and rural areas?
+<br>
+By visualizing these trends, the analysis provides valuable insights for policymakers and educators in supporting EL students across diverse geographic settings.
+
+Column {data-height=550}
 -----------------------------------------
 ### Figure 1
 
@@ -235,7 +242,7 @@ oregon_ell_urban_summary <-oregon_ell_urban_summary %>%
 ```
 
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, include=FALSE}
 # Plot the data
 p2 <- ggplot(oregon_ell_urban_summary, aes(x = Year, y = Student, fill = Area)) +
   geom_bar(stat = "identity", position = "dodge") +
@@ -244,11 +251,102 @@ p2 <- ggplot(oregon_ell_urban_summary, aes(x = Year, y = Student, fill = Area)) 
        x = "Year",
        y = "Total EL Students",
        fill = "Area Type") +
-  theme_minimal()
+  theme_minimal()  +
+  theme(
+    axis.line = element_line(size = 1, color = "black"),  # Thick black axis border
+    axis.text = element_text(size = 9, color = "black"),   # Adjust axis text size
+    axis.title = element_text(size = 10, face = "bold")     # Bold axis labels
+  )
 
 ggplotly(p2)
 
 ```
+
+
+```{r}
+
+
+
+oregon_urban <- data_oregon %>%
+  group_by(leaid,leaname,year,urban) %>%
+  summarise( white           = sum(wht), 
+             black           = sum(blk),
+             hispanic        = sum(hsp),
+             asian           = sum(asn),
+             native_american = sum(ind),
+             total_enrolment = sum(totenrl),
+             .groups         = "drop") 
+
+
+oregon_ell_urban1 <- data_oregon %>%
+  group_by(leaid,year, urban) %>%
+  summarise(ell  = first(ell), .groups = "drop")
+
+
+data_oregon_urban <- left_join(oregon_urban, oregon_ell_urban1, by = c('leaid','year','urban'))
+
+# Ensure 'urban' is a factor with correct labels
+data_oregon_urban <- data_oregon_urban %>%
+  mutate(urban = factor(urban, levels = c(0, 1), labels = c("Rural", "Urban")))
+
+
+
+# Summarize EL student proportion relative to total enrollment
+oregon_el_summary <- data_oregon_urban %>%
+  group_by(urban) %>%
+  summarise(
+    total_students = sum(total_enrolment, na.rm = TRUE),  # Ensure no missing values
+    total_ell = sum(ell, na.rm = TRUE),  # Sum EL students
+    avg_el_proportion = ifelse(total_students > 0, (total_ell / total_students) * 100, NA),  # Avoid division by zero
+    .groups = "drop"
+  ) %>%
+  filter(!is.na(avg_el_proportion))  # Remove rows with missing values
+
+
+
+# If no rows exist after filtering, print a message
+if (nrow(oregon_el_summary) == 0) {
+  print("No valid data found! Check total enrollment values.")
+} else {
+  # Create the bar chart
+  p_el_bar <- ggplot(oregon_el_summary, aes(x = urban, y = avg_el_proportion, fill = urban)) +
+    geom_col(color = "black", width = 0.6) +  # Reduce bar width for clarity
+    scale_fill_manual(values = c("Rural" = "#00897B", "Urban" = "#FFD54F")) +  # Improved colors
+    labs(
+      title = "EL Student Proportion in Urban vs. Rural Districts",
+      x = "District Type",
+      y = "EL Students as % of Total Enrollment",
+      fill = "District Type"
+    ) +
+    theme_minimal() +
+    theme(
+      axis.line = element_line(size = 1, color = "black"),
+      axis.text = element_text(size = 9, color = "black"),
+      axis.title = element_text(size = 10, face = "bold"),
+      plot.title = element_text(size = 12, face = "bold", color = "#009688")
+    ) +
+    ylim(0, 100)  # Ensures proportions stay within 0-100%
+
+  # Convert to interactive plot
+  ggplotly(p_el_bar)
+}
+
+
+```
+
+
+
+
+>
+The bar chart illustrates the proportion of English Learner (EL) students relative to total student enrollment in urban and rural school districts. Unlike absolute counts, this measure provides a standardized comparison by controlling for overall district size.
+Urban districts have a higher EL student proportion (27.66%) compared to rural districts (21.30%). This suggests that EL students make up a larger share of total enrollment in urban areas, despite rural districts having a greater total number of students.
+The higher urban EL proportion may be influenced by immigrant settlement patterns, greater availability of language support services, and school district policies that affect EL identification and classification.
+Rural districts, while having more total students, show a lower EL proportion, which could reflect differences in demographics, reclassification rates, or access to EL-specific educational programs.
+<br>
+</br>
+
+
+
 
 
 
@@ -257,25 +355,25 @@ ggplotly(p2)
 ```{r}
 p3 <- ggplot(oregon_ell_urban_summary, aes(x = Year, y = Student, color = Area, group = Area)) +
   geom_line(size = 1.2) +
-  geom_point(size = 2) +
+  geom_point(size = 2,  stroke=0.5) +
+  scale_color_manual(values = c("Rural" = "#009688", "Urban" = "#FFC107")) +
   labs(title = "Trend of EL Students in Urban vs. Rural Areas",
        x = "Year",
        y = "Total EL Students",
        color = "Urban/Rural") +
-  theme_minimal()
+  theme_minimal()+
+  theme(
+    axis.line = element_line(size = 1, color = "black"),  # Thick black axis border
+    axis.text = element_text(size = 9, color = "black"),   # Adjust axis text size
+    axis.title = element_text(size = 10, face = "bold")     # Bold axis labels
+  )
 
 ggplotly(p3)
 
 ```
 
-Row {data-height=550}
------------------------------------------
-<br>
+> <br>
 </br>
-The bar chart consistently shows that urban districts have a significantly higher number of EL students compared to rural districts. Although both urban and rural EL enrollments fluctuate slightly over time, the urban EL student population remains dominant throughout. This suggests that EL students are more concentrated in urban areas, likely due to larger immigrant populations and better access to language support programs in city school districts.
-<br>
-</br>
-
 This line graph confirms that urban districts maintain a steady EL student population, whereas rural districts show more variation. The EL student population in urban areas remains relatively stable, while rural districts experience a slight decline over time. This could be due to demographic shifts, with families moving to urban centers for better job opportunities and educational resources.
 <br>
 </br>
@@ -283,18 +381,116 @@ This line graph confirms that urban districts maintain a steady EL student popul
 
 
 
+
+
 #  Socioeconomic Factors & EL Students
 
-Economic Disadvantage & EL Enrollment
+### **<font color="#009688">Understanding the Economic Context of English Learners in Oregon</font>**
 
-This section examines how free lunch eligibility (a proxy for economic status) relates to EL student distribution.
+Economic disadvantage plays a critical role in shaping English Learner (EL) student distribution across school districts. This section examines the relationship between free lunch eligibility—a widely used proxy for economic status—and EL enrollment trends in Oregon.
+<br>
 
-Column {data-height=450}
+The visualizations below analyze how socioeconomic factors impact EL student populations, focusing on free lunch eligibility as an indicator of economic disadvantage. Free lunch eligibility remains consistently high, suggesting that a significant portion of students in Oregon come from low-income backgrounds.
+<br>
+However, despite persistent economic hardship, EL student enrollment has declined over time. This trend may indicate faster reclassification rates, where students transition out of EL status more quickly, or broader shifts in immigration patterns affecting EL enrollment. By examining these dynamics, this analysis provides insights for policymakers and educators seeking to support EL students in economically disadvantaged communities.
+
+**Higher ELL Concentration in Economically Disadvantaged Districts**
+Districts where 76-100% of students qualify for free lunch have the highest number of ELL students.
+This trend suggests that ELL populations are more concentrated in lower-income communities.
+<br>
+**Wealthier Districts Have Fewer ELL Students**
+School districts with 0-25% free lunch eligibility have significantly fewer ELL students.
+This pattern highlights a demographic divide where ELL students are less prevalent in wealthier areas.
+<br>
+**Middle-Tier Districts Show Varied ELL Counts**
+Districts in the 26-50% and 51-75% free lunch categories show moderate ELL numbers, reinforcing that ELL students are often present in economically mixed communities.
+This suggests a strong correlation between economic disadvantage and higher EL student enrollment, reinforcing the idea that many EL students come from economically disadvantaged backgrounds. It also highlights the need for additional support services in lower-income districts where EL populations are concentrated.
+
+
+
+Column {data-height=650}
 -----------------------------------------
 
 ### Figure 1
 
 ```{r, include=FALSE}
+oregon_frl <- data_oregon %>%
+  group_by(leaid,year) %>%
+  summarise(perfrl  = first(perfrl), .groups = "drop")
+
+# Join the two datasets by leaid and year
+oregon_frl1 <- data_oregon_urban %>%
+  full_join(oregon_frl, by = c("leaid", "year"))
+
+# Aggregate data to compute total free lunch students
+oregon_frl1 <- oregon_frl1 %>%
+  group_by(leaid, year) %>%
+  summarise(
+    total_enrollment = sum(total_enrolment, na.rm = TRUE),  # Total students
+    total_free_lunch = sum(perfrl * total_enrolment, na.rm = TRUE),  # Compute free lunch students
+    .groups = "drop"
+  )
+
+# Join the two datasets by leaid and year
+oregon_frl1 <- oregon_frl1 %>%
+  left_join(oregon_ell, by = c("leaid", "year"))
+
+
+
+```
+
+
+
+
+```{r, echo=FALSE}
+# Update variable names for readability
+oregon_frl_cleaned <- oregon_frl1 %>%
+  group_by(year) %>%
+  summarise(
+    `Total Free Lunch Eligibility` = sum(total_free_lunch, na.rm = TRUE),
+    `Total EL Students` = sum(ell, na.rm = TRUE)
+  ) %>%
+  pivot_longer(cols = c(`Total Free Lunch Eligibility`, `Total EL Students`), 
+               names_to = "Variable", values_to = "Value")
+
+# Create the plot with updated colors
+p_frl_ell <- ggplot(oregon_frl_cleaned, aes(x = year, y = Value, color = Variable, group = Variable)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3, stroke = 0.5) +  # Enhancing readability
+  scale_color_manual(values = c("Total Free Lunch Eligibility" = "#009688", 
+                                "Total EL Students" = "#FFC107")) +
+  labs(
+    title = "Trend of Free Lunch Eligibility and EL Students Over Time",
+    x = "Year",
+    y = " Count",
+    color = "Indicator"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.line = element_line(size = 1, color = "black"), 
+    axis.text = element_text(size = 9, color = "black"),   
+    axis.title = element_text(size = 10, face = "bold"),  
+    plot.title = element_text(color = "#009688", size = 12, face = "bold")  
+  )
+
+# Convert to interactive plot
+ggplotly(p_frl_ell)
+
+```
+
+
+
+
+
+
+
+
+
+
+### Figure 2
+
+```{r}
+
 oregon_frl <- data_oregon %>%
   group_by(leaid,year) %>%
   summarise(perfrl  = first(perfrl)*100, .groups = "drop")
@@ -303,32 +499,7 @@ oregon_frl <- data_oregon %>%
 # Join the two datasets by leaid and year
 oregon_frl <- oregon_ell %>%
   full_join(oregon_frl, by = c("leaid", "year"))
-
-
-```
-
-```{r}
-oregon_frl %>%
-  group_by(year) %>%
-  summarise(avg_perfrel = mean(perfrl, na.rm = TRUE),
-            avg_ell = mean(ell, na.rm = TRUE)) %>%
-  pivot_longer(cols = c(avg_perfrel, avg_ell), names_to = "Variable", values_to = "Value") %>%
-  ggplot(aes(x = year, y = Value, color = Variable)) +
-  geom_line(size = 1.2) +
-  labs(title = "Trend of Free Lunch Eligibility and ELL Students Over Time",
-       x = "Year",
-       y = "Percentage / Count",
-       color = "Variable") +
-  theme_minimal()
-
-```
-
-
-
-
-### Figure 2
-
-```{r}
+# Update free lunch eligibility categories
 oregon_frl <- oregon_frl %>%
   mutate(perfrel_category = cut(perfrl, 
                                 breaks = c(0, 25, 50, 75, 100), 
@@ -336,15 +507,65 @@ oregon_frl <- oregon_frl %>%
                                            "High (51-75%)", "Very High (76-100%)"),
                                 include.lowest = TRUE))
 
-ggplot(oregon_frl, aes(x = perfrel_category, y = ell, fill = perfrel_category)) +
-  stat_summary(fun = mean, geom = "bar", color = "black") +
+# Define a contrasting color palette
+custom_colors <- c("Low (0-25%)" = "#FFE1FF",   # Soft Aqua (Teal Tone)
+                   "Medium (26-50%)" = "#FFD54F",  # Golden Yellow (Contrast)
+                   "High (51-75%)" = "#C1FFC1",  # Deep Teal (Strong)
+                   "Very High (76-100%)" = "#CD9B9B")  # Dark Navy (Bold Contrast)
+
+# Create the bar chart with updated legend name
+p_frl_ell_bar <- ggplot(oregon_frl, aes(x = perfrel_category, y = ell, fill = perfrel_category)) +
+  stat_summary(fun = mean, geom = "bar", color = "black") +  # Keeping black borders for contrast
+  scale_fill_manual(values = custom_colors, name = "Free Lunch Eligibility Category") +  # Updated legend name
   labs(title = "Average ELL Students by Free Lunch Eligibility Categories",
        x = "Free Lunch Eligibility (%)",
        y = "Average ELL Students") +
-  scale_fill_viridis_d() +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+    axis.line = element_line(size = 1, color = "black"),  
+    axis.text = element_text(size = 6, color = "black"),   
+    axis.title = element_text(size = 10, face = "bold"),
+    plot.title = element_text(color = "#00796B", size = 12, face = "bold"),  # Title in dark teal
+    legend.title = element_text(face = "bold")  # Making legend title bold for clarity
+  )
+
+# Convert to interactive Plotly graph
+ggplotly(p_frl_ell_bar)
 
 ```
+
+Row {data-height=600}
+-----------------------------------------
+### Regression
+
+This scatter plot shows the relationship between **Free Lunch Eligibility (%)**, a proxy for economic disadvantage, and **Total EL Students** across school districts in Oregon. While there is a weak positive correlation, indicating that districts with higher free lunch eligibility tend to have more EL students, the trend is not consistent across all districts. A significant number of districts with low free lunch eligibility also have low EL enrollment, whereas some districts with moderate to high economic disadvantage exhibit a sharp increase in EL student counts. The overall distribution suggests that factors beyond economic disadvantage, such as urbanization, immigration patterns, and district-level policies, may influence EL student enrollment.
+
+```{r}
+p1 <- ggplot(oregon_frl, aes(x = perfrl, y = ell)) +
+  geom_point(alpha = 0.5, color = "#FFC107") + # Teal-colored points for visibility
+  geom_smooth(method = "lm", color = "#009688",size = 1.2, se = FALSE) + # Magenta regression line with confidence interval
+  labs(
+    title = "Correlation between EL Enrollment and Free Lunch Eligibility",
+    x = "Free Lunch Eligibility (%)",
+    y = "Total EL Students"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.line = element_line(size = 1, color = "black"),  # Thick black axis border
+    axis.text = element_text(size = 12, color = "black"),   # Adjust axis text size
+    axis.title = element_text(size = 14, face = "bold")     # Bold axis labels
+  )
+
+
+ggplotly(p1) %>% layout(height = 400)
+
+```
+
+
+
+
+
+
 
 
 
@@ -459,78 +680,6 @@ print(unmatched_in_shape)
 
 
 
-Row {data-height=800}
------------------------------------------
-###  Description
-
-
-
-**Understanding the Economic Context of English Learners in Oregon**
-The above visualizations examine the relationship between free lunch eligibility and the number of English Language Learner (ELL) students across school districts in Oregon. Free lunch eligibility serves as a proxy for economic disadvantage, providing insights into how socioeconomic factors impact ELL populations.
-
-<br>
-</br>
-Free lunch eligibility (%) remains relatively high across all years, indicating that a large proportion of students in Oregon come from low-income backgrounds.
-EL student numbers, on the other hand, show a decline over time, reinforcing the trend seen in the first graph.
-This suggests that although economic hardship persists, the EL student population is shrinking. One possible explanation is that some EL students may be transitioning out of EL classification faster, while overall immigration trends could also be changing.
-
-**Higher ELL Concentration in Economically Disadvantaged Districts**
-
-Districts where 76-100% of students qualify for free lunch have the highest number of ELL students.
-This trend suggests that ELL populations are more concentrated in lower-income communities.
-
-<br>
-</br>
-
-**Wealthier Districts Have Fewer ELL Students**
-
-School districts with 0-25% free lunch eligibility have significantly fewer ELL students.
-This pattern highlights a demographic divide where ELL students are less prevalent in wealthier areas.
-
-<br>
-</br>
-
-**Middle-Tier Districts Show Varied ELL Counts**
-
-Districts in the 26-50% and 51-75% free lunch categories show moderate ELL numbers, reinforcing that ELL students are often present in economically mixed communities.
-
-
-This suggests a strong correlation between economic disadvantage and higher EL student enrollment, reinforcing the idea that many EL students come from economically disadvantaged backgrounds. It also highlights the need for additional support services in lower-income districts where EL populations are concentrated.
-
-
-
-
-Row {data-height=800}
------------------------------------------
-### Regression
-
-```{r}
-p1 <- ggplot(oregon_frl, aes(x = perfrl, y = ell)) +
-  geom_point(alpha = 0.5, color = "#009688") + # Teal-colored points for visibility
-  geom_smooth(method = "lm", color = "#FFC107",size = 1.2, se = FALSE) + # Magenta regression line with confidence interval
-  labs(
-    title = "Correlation between EL Enrollment and Free Lunch Eligibility",
-    x = "Free Lunch Eligibility (%)",
-    y = "Total EL Students"
-  ) +
-  theme_minimal() +
-  theme(
-    axis.line = element_line(size = 1, color = "black"),  # Thick black axis border
-    axis.text = element_text(size = 12, color = "black"),   # Adjust axis text size
-    axis.title = element_text(size = 14, face = "bold")     # Bold axis labels
-  )
-
-
-ggplotly(p1) %>% layout(height = 600)
-
-```
-
-Column {data-height=100}
------------------------------------------
-
-### Tab
-
-This scatter plot shows the relationship between **Free Lunch Eligibility (%)**, a proxy for economic disadvantage, and **Total EL Students** across school districts in Oregon. While there is a weak positive correlation, indicating that districts with higher free lunch eligibility tend to have more EL students, the trend is not consistent across all districts. A significant number of districts with low free lunch eligibility also have low EL enrollment, whereas some districts with moderate to high economic disadvantage exhibit a sharp increase in EL student counts. The overall distribution suggests that **factors beyond economic disadvantage**, such as **urbanization, immigration patterns, and district-level policies**, may influence EL student enrollment.
 
 
 
@@ -542,21 +691,6 @@ This scatter plot shows the relationship between **Free Lunch Eligibility (%)**,
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-Map {data-navmenu="Race"}
-=======================================
 
 ```{r, echo=FALSE}
 options(tigris_use_cache = TRUE)
@@ -624,13 +758,16 @@ map <- map %>%
   ) %>%
   setView(lng = -120.5542, lat = 43.8041, zoom = 6)  # Centered & fixed on Oregon
 
-# Print the map
-map
+
 
 ```
 
 Graph {data-orientation=rows data-navmenu="Race"}
 ==============================
+
+### **<font color="#009688">Race & English Learner (EL) Enrollment</font>**
+
+Demographic composition plays a critical role in understanding English Learner (EL) student enrollment patterns across school districts. Racial and ethnic backgrounds influence language acquisition needs, educational experiences, and program placement for EL students. This section explores the relationship between racial composition and EL enrollment, with a particular focus on the Hispanic student population percentage, which is strongly associated with EL designation. Through the visualizations in this dashboard, key trends in racial distribution and their impact on EL enrollment are analyzed to inform educational policies and resource allocation decisions.
 
 Column {data-height=450}
 -----------------------------------------
@@ -667,6 +804,8 @@ ggplotly(p_race_scatter)
 
 ```
 
+> The first visualization examines the relationship between Hispanic student proportion and EL enrollment across school districts. The scatter plot reveals a positive correlation, where districts with a higher percentage of Hispanic students tend to have more EL students. However, the trend is not strictly linear, as some districts with high Hispanic populations exhibit lower EL enrollment. This variation suggests that district-level policies, bilingual education programs, and reclassification rates may influence EL designation differently across regions.
+
 ### Figure 2
 
 ```{r}
@@ -690,7 +829,7 @@ race_summary <- oregon_race %>%
 # Plot Bar Chart
 p_race_bar <- ggplot(race_summary, aes(x = Race, y = Percentage, fill = ell_category)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
-  scale_fill_manual(values = c("High EL Enrollment" = "#009688", "Low EL Enrollment" = "#FFc107")) +
+  scale_fill_manual(values = c("High EL Enrollment" = "#009688", "Low EL Enrollment" = "#FFC107")) +
   labs(title = "Racial Composition in High vs. Low EL Enrollment Districts",
        x = "Race",
        y = "Average Student Percentage (%)",
@@ -698,7 +837,7 @@ p_race_bar <- ggplot(race_summary, aes(x = Race, y = Percentage, fill = ell_cate
   theme_minimal() +
   theme(
     axis.line = element_line(size = 1.5, color = "black"),
-    axis.text = element_text(size = 12, color = "black"),
+    axis.text = element_text(size = 9, color = "black"),
     axis.title = element_text(size = 14, face = "bold")
   )
 
@@ -711,14 +850,290 @@ ggplotly(p_race_bar)
 
 
 
+> The second visualization compares racial composition in districts with high vs. low EL enrollment. The results indicate that Hispanic students make up a significantly larger proportion of student populations in high EL enrollment districts. Conversely, districts with lower EL enrollment have a higher percentage of White students, reinforcing the demographic divide in EL classification. Other racial groups, including Asian, Black, and Native American students, represent smaller shares of EL enrollment, potentially due to differences in linguistic backgrounds, English proficiency upon school entry, or varying EL classification criteria across school districts.
+
+
+Map {data-navmenu="Race"}
+=======================================
+
+```{r}
+map
+```
+
+# Prediction
+
+### **<font color="#009688">Predicting English Learner (EL) Student Enrollment in Oregon</font>**  
+
+This dashboard provides a predictive analysis of English Learner (EL) student enrollment trends across Oregon school districts, offering insights for policymakers, educators, and researchers. By leveraging predictive modeling techniques, the analysis examines the influence of economic disadvantage (free lunch eligibility), urban-rural classification, and the proportion of Hispanic students on EL enrollment.
+<br>
+To assess predictive accuracy, this dashboard applies two statistical models:
+<br>
+**Linear Regression** – A simple, interpretable model that estimates EL enrollment based on direct relationships between predictors and outcomes.
+<br>
+**Random Forest** – A more flexible, non-linear model capable of capturing complex interactions between variables.
+<br>
+By comparing these models, the analysis highlights key trends, predictive accuracy, and the most influential factors shaping EL student enrollment in Oregon. These insights inform resource allocation strategies, intervention programs, and policy adjustments to better support EL populations across diverse school districts.
+
+
+
+Column {data-height=750}
+-----------------------------------------
+
+
+
+```{r, include=FALSE}
+library(caret)
+library(randomForest)
+
+
+model_data <- full_join(oregon_ell_urban, oregon_frl)
+
+
+model_data <- full_join(model_data, oregon_race_filtered)
+
+
+model_data <- model_data %>%
+  mutate(prop_hispanic = hispanic / total_enrolment * 100)
+
+# Filter relevant columns and remove NAs
+model_data <- model_data %>%
+  select(ell, perfrl, urban,prop_hispanic) %>%
+  na.omit()
+
+# Convert 'urban' to factor (0 = Rural, 1 = Urban)
+model_data$urban <- as.factor(model_data$urban)
+
+# Split data into training (80%) and testing (20%)
+set.seed(123)
+train_index <- createDataPartition(model_data$ell, p = 0.8, list = FALSE)
+train_data <- model_data[train_index, ]
+test_data <- model_data[-train_index, ]
+
+```
+
+
+```{r, include=FALSE}
+# Train Multiple Linear Regression Model
+lm_model <- lm(ell ~ perfrl + urban + prop_hispanic , data = train_data)
+
+# Train Random Forest Model
+rf_model <- randomForest(ell ~ perfrl + urban + prop_hispanic, data = train_data, ntree = 500)
+
+# Predict on Test Data
+test_data$lm_pred <- predict(lm_model, newdata = test_data)
+test_data$rf_pred <- predict(rf_model, newdata = test_data)
+
+
+
+```
+
+```{r}
+library(broom)
+library(randomForest)
+library(knitr)
+
+# Extract coefficients for Linear Regression
+lm_summary <- tidy(lm_model)
+
+# Get variable importance for Random Forest
+rf_importance <- as.data.frame(importance(rf_model))
+rf_importance$Variable <- rownames(rf_importance)
+
+# Merge both summaries
+#regression_table <- merge(lm_summary, rf_importance, by.x = "term", by.y #= "Variable", all.x = TRUE)
+
+# Display table
+#kable(regression_table, caption = "Regression Coefficients & Variable Importance")
+
+
+
+
+
+```
+
+
+### Linear Regression
+
+```{r}
+# Scatter Plot of Actual vs Predicted EL Enrollment (Random Forest)
+p_pred_rf <- ggplot(test_data, aes(x = ell, y = rf_pred)) +
+  geom_point(alpha = 0.5, color = "#FFC107") +  # Scatter points
+  geom_abline(slope = 1, intercept = 0, color = "#009688", size = 1.2) +  # Perfect prediction line
+  labs(
+    title = "Predicted vs. Actual EL Enrollment (Random Forest)",
+    x = "Actual EL Enrollment",
+    y = "Predicted EL Enrollment"
+  ) +
+  theme_minimal() +
+    theme(
+    axis.line = element_line(size = 1.5, color = "black"),
+    axis.text = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, face = "bold")
+  )
+
+
+ggplotly(p_pred_rf)  
+
+```
+
+> This section presents the results of a multiple linear regression model examining how key socioeconomic and demographic factors influence English Learner (EL) student enrollment across Oregon school districts. The analysis focuses on three primary predictors:
+Economic Disadvantage (proxied by free lunch eligibility)
+District Urbanization (urban vs. rural classification)
+Proportion of Hispanic Students (as a percentage of total enrollment)
+
+
+
+
+### Factors Influencing EL Student Enrollment in Oregon
+
+```{r}
+library(stargazer)
+
+# Generate a table for both models
+stargazer(lm_model, type = "text", title = "Regression Results", align = TRUE)
+```
+
+> 
+This regression table presents the results of a multiple linear regression model analyzing the relationship between English Learner (EL) student enrollment and three key predictor variables: economic disadvantage (free lunch eligibility), district urbanization, and the proportion of Hispanic students.
+<br>
+A *1% increase* in free lunch eligibility is associated with *4.52 fewer EL students* (*p < 0.01*), suggesting that EL students are not necessarily concentrated in the most economically disadvantaged districts. In contrast, *urban districts enroll 2,391 more EL students* than rural ones (*p < 0.001*), highlighting the higher concentration of EL students in urban areas, where support services and immigrant communities are more prevalent. Additionally, a *1% increase in the Hispanic student population* corresponds to *21.77 more EL students* (*p < 0.001*), reinforcing the strong link between Hispanic demographics and EL classification.
 
 
 
 
 
 
+```{r, include=FALSE}
+# Load required packages
+library(Metrics)  # For RMSE calculation
+
+# Calculate RMSE
+lm_rmse <- rmse(test_data$ell, test_data$lm_pred)
+rf_rmse <- rmse(test_data$ell, test_data$rf_pred)
+
+# Calculate R-squared
+lm_r2 <- cor(test_data$ell, test_data$lm_pred)^2
+rf_r2 <- cor(test_data$ell, test_data$rf_pred)^2
+
+# Store results in a dataframe for visualization
+model_comparison <- data.frame(
+  Model = c("Linear Regression", "Random Forest"),
+  RMSE = c(lm_rmse, rf_rmse),
+  R2 = c(lm_r2, rf_r2)
+)
 
 
 
+library(knitr)
+
+# Create a dataframe for model comparison
+model_comparison <- data.frame(
+  Model = c("Linear Regression", "Random Forest"),
+  RMSE = c(lm_rmse, rf_rmse),  # Replace with actual values
+  R2 = c(lm_r2, rf_r2)         # Replace with actual values
+)
+
+# Display table
+#kable(model_comparison, caption = "Model Comparison: RMSE and R²")
+
+```
+
+
+
+Row {data-height=600}
+-----------------------------------------
+
+### Comparison of EL Student Enrollment Predictions
+
+
+
+
+
+```{r, warning=FALSE}
+library(ggplot2)
+library(ggpubr)
+
+# RMSE Comparison Bar Chart
+p_rmse <- ggplot(model_comparison, aes(x = Model, y = RMSE, fill = Model)) +
+  geom_bar(stat = "identity", color = "black") +
+  scale_fill_manual(values = c("#FFC107", "#009688")) +
+  labs(title = "RMSE Comparison (Lower is Better)", y = "RMSE", x = "Model") +
+  theme_minimal() +
+  theme(legend.position = "none",
+    axis.line = element_line(size = 1.5, color = "black"),
+    axis.text = element_text(size = 9, color = "black"),
+    axis.title = element_text(size = 10, face = "bold")
+  )
+
+
+
+
+
+# R² Comparison Bar Chart
+p_r2 <- ggplot(model_comparison, aes(x = Model, y = R2, fill = Model)) +
+  geom_bar(stat = "identity", color = "black") +
+  scale_fill_manual(values = c("#FFC107", "#009688")) +
+  labs(title = "R² Comparison (Higher is Better)", y = "R²", x = "Model") +
+  theme_minimal() +
+  theme(legend.position = "none",
+    axis.line = element_line(size = 1.5, color = "black"),
+    axis.text = element_text(size = 9, color = "black"),
+    axis.title = element_text(size = 10, face = "bold")
+  )
+
+# Arrange charts in a grid
+ggarrange(p_rmse, p_r2, ncol = 2) 
+
+```
+
+
+> **Model Comparison: Linear Regression vs. Random Forest**  
+<br>
+This section presents a comparison between **Linear Regression** and **Random Forest** models, evaluating their accuracy in predicting English Learner (EL) enrollment across Oregon school districts.
+<br>
+The predictive accuracy of EL student enrollment in Oregon is assessed by comparing **Linear Regression**, a straightforward and interpretable model, with **Random Forest**, a more adaptable, nonlinear approach.  
+<br>
+A **lower RMSE (Root Mean Squared Error) in Random Forest** suggests that **more precise predictions** of EL enrollment are achieved compared to Linear Regression. Likewise, a **higher R² (coefficient of determination) in Random Forest** indicates that **more variation in EL student numbers across districts is captured**.  
+While **Linear Regression is not optimized for prediction**, it serves as a **reference point** for determining whether a more advanced model is required.
+
+
+
+Row {data-height=800}
+-----------------------------------------
+### Evaluating EL Enrollment Predictions: Linear Regression vs. Random Forest
+
+```{r}
+p_pred_compare <- ggplot(test_data, aes(x = ell)) +
+  geom_point(aes(y = lm_pred, color = "Linear Regression"), alpha = 0.5) +
+  geom_point(aes(y = rf_pred, color = "Random Forest"), alpha = 0.5) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  scale_color_manual(values = c("Linear Regression" = "#FFC107", "Random Forest" = "#009688")) +
+  labs(title = "Predicted vs. Actual EL Enrollment", x = "Actual EL Enrollment", y = "Predicted EL Enrollment") +
+  theme_minimal() +
+  theme(legend.title = element_blank() ,
+    axis.line = element_line(size = 1.5, color = "black"),
+    axis.text = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 14, face = "bold")
+  )
+
+ggplotly(p_pred_compare)  
+
+```
+
+> **Interpreting the Prediction Results: Linear Regression vs. Random Forest**
+<br>
+The scatter plot above compares the actual and predicted English Learner (EL) enrollment across Oregon school districts, using two different models: Linear Regression (yellow) and Random Forest (teal). The dashed diagonal line represents a perfect prediction—if a point falls exactly on this line, it means the model's prediction was completely accurate.
+<br>
+**Random Forest provides more accurate predictions:**
+<br>
+1. The teal points (Random Forest predictions) are generally closer to the diagonal line, indicating a better fit to actual EL enrollment.
+<br>
+2. This suggests that the Random Forest model captures nonlinear relationships in the data better than Linear Regression.
+<br>
+**Linear Regression underperforms, especially for high EL enrollment districts:**
+<br>
+1. The yellow points (Linear Regression predictions) deviate more from the diagonal, particularly for districts with larger EL populations.
+<br>
+2. This suggests that a simple linear model struggles to capture the complexity of EL enrollment trends across different districts.
 
 
