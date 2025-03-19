@@ -34,10 +34,10 @@ Sidebar Title {.sidebar data-width=480}
 ---------------------------------------
 
 
-### **Understanding English Learner Enrollment in Oregon (2009–2014)**
+### **Understanding English Learner (EL) Enrollment in Oregon (2009–2014)**
 
 
-**English Language Learners (ELL) are students who require additional support in acquiring English proficiency while navigating their academic curriculum. Understanding where EL students are concentrated, how their numbers have changed over time, and what factors influence their enrollment is essential for policymakers and educators working to provide equitable educational opportunities.**
+**English Language Learners are students who require additional support in acquiring English proficiency while navigating their academic curriculum. Understanding where EL students are concentrated, how their numbers have changed over time, and what factors influence their enrollment is essential for policymakers and educators working to provide equitable educational opportunities.**
 
 **This dashboard explores trends in EL student enrollment across Oregon's school districts from 2009 to 2014. It examines the relationship between EL populations and key demographic factors, including urban vs. rural district differences and the link between socioeconomic status (free lunch eligibility) and EL enrollment.**
 <br>
@@ -76,10 +76,10 @@ Row {data-height=800}
 
 
 
-### **Trends in English Learner Enrollment in Oregon (2009–2013)**
+### **Trends in EL Enrollment in Oregon (2009–2013)**
 
 
-This section presents a longitudinal analysis of the total number of English Learner (EL) students enrolled across school districts in Oregon. Monitoring these trends helps stakeholders understand changes in EL populations over time, potentially informing resource allocation, support services, and educational policy decisions.
+This section presents a longitudinal analysis of the total number of EL students enrolled across school districts in Oregon. Monitoring these trends helps stakeholders understand changes in EL populations over time, potentially informing resource allocation, support services, and educational policy decisions.
 
 ```{r, include=FALSE}
 
@@ -183,9 +183,9 @@ ggplotly(p1)  %>% layout(height = 500)
 
 #  Area type 
 
-### **<font color="#009688">Urban vs. Rural EL Enrollment: Understanding Geographic Disparities</font>** 
+### **<font color="#009688">Urban vs. Rural English Learner (EL) Enrollment: Understanding Geographic Disparities</font>** 
 
-English Learner (EL) student enrollment varies significantly between urban and rural school districts, influenced by demographic distribution and economic factors. Understanding these patterns is essential for policy design and resource allocation, ensuring equitable educational opportunities for EL students across different regions.
+EL student enrollment varies significantly between urban and rural school districts, influenced by demographic distribution and economic factors. Understanding these patterns is essential for policy design and resource allocation, ensuring equitable educational opportunities for EL students across different regions.
 <br>
 This section examines:
 <br>
@@ -338,7 +338,7 @@ if (nrow(oregon_el_summary) == 0) {
 
 
 >
-The bar chart illustrates the proportion of English Learner (EL) students relative to total student enrollment in urban and rural school districts. Unlike absolute counts, this measure provides a standardized comparison by controlling for overall district size.
+The bar chart illustrates the proportion of EL students relative to total student enrollment in urban and rural school districts. Unlike absolute counts, this measure provides a standardized comparison by controlling for overall district size.
 Urban districts have a higher EL student proportion (27.66%) compared to rural districts (21.30%). This suggests that EL students make up a larger share of total enrollment in urban areas, despite rural districts having a greater total number of students.
 The higher urban EL proportion may be influenced by immigrant settlement patterns, greater availability of language support services, and school district policies that affect EL identification and classification.
 Rural districts, while having more total students, show a lower EL proportion, which could reflect differences in demographics, reclassification rates, or access to EL-specific educational programs.
@@ -363,9 +363,9 @@ p3 <- ggplot(oregon_ell_urban_summary, aes(x = Year, y = Student, color = Area, 
        color = "Urban/Rural") +
   theme_minimal()+
   theme(
-    axis.line = element_line(size = 1, color = "black"),  # Thick black axis border
-    axis.text = element_text(size = 9, color = "black"),   # Adjust axis text size
-    axis.title = element_text(size = 10, face = "bold")     # Bold axis labels
+    axis.line = element_line(size = 1, color = "black"),  
+    axis.text = element_text(size = 9, color = "black"),   
+    axis.title = element_text(size = 10, face = "bold")     
   )
 
 ggplotly(p3)
@@ -385,9 +385,9 @@ This line graph confirms that urban districts maintain a steady EL student popul
 
 #  Socioeconomic Factors & EL Students
 
-### **<font color="#009688">Understanding the Economic Context of English Learners in Oregon</font>**
+### **<font color="#009688">Understanding the Economic Context of English Learners (EL) in Oregon</font>**
 
-Economic disadvantage plays a critical role in shaping English Learner (EL) student distribution across school districts. This section examines the relationship between free lunch eligibility—a widely used proxy for economic status—and EL enrollment trends in Oregon.
+Economic disadvantage plays a critical role in shaping EL student distribution across school districts. This section examines the relationship between free lunch eligibility—a widely used proxy for economic status—and EL enrollment trends in Oregon.
 <br>
 
 The visualizations below analyze how socioeconomic factors impact EL student populations, focusing on free lunch eligibility as an indicator of economic disadvantage. Free lunch eligibility remains consistently high, suggesting that a significant portion of students in Oregon come from low-income backgrounds.
@@ -767,7 +767,7 @@ Graph {data-orientation=rows data-navmenu="Race"}
 
 ### **<font color="#009688">Race & English Learner (EL) Enrollment</font>**
 
-Demographic composition plays a critical role in understanding English Learner (EL) student enrollment patterns across school districts. Racial and ethnic backgrounds influence language acquisition needs, educational experiences, and program placement for EL students. This section explores the relationship between racial composition and EL enrollment, with a particular focus on the Hispanic student population percentage, which is strongly associated with EL designation. Through the visualizations in this dashboard, key trends in racial distribution and their impact on EL enrollment are analyzed to inform educational policies and resource allocation decisions.
+Demographic composition plays a critical role in understanding EL student enrollment patterns across school districts. Racial and ethnic backgrounds influence language acquisition needs, educational experiences, and program placement for EL students. This section explores the relationship between racial composition and EL enrollment, with a particular focus on the Hispanic student population percentage, which is strongly associated with EL designation. Through the visualizations in this dashboard, key trends in racial distribution and their impact on EL enrollment are analyzed to inform educational policies and resource allocation decisions.
 
 Column {data-height=450}
 -----------------------------------------
@@ -855,6 +855,31 @@ ggplotly(p_race_bar)
 
 Map {data-navmenu="Race"}
 =======================================
+
+
+
+
+### 
+
+<br>
+<br>
+<br>
+
+**Exploring Student Demographics & English Learner (EL) Enrollment Across Oregon**  
+<br>
+<br>
+This interactive map presents the racial composition and EL student enrollment across Oregon school districts from 2009 to 2014. By visualizing student demographics, the map offers insights into how different racial groups are distributed across districts and highlights variations in EL student concentrations over time. It illustrates district-level changes in EL enrollment, identifying areas with higher or lower numbers of EL students and revealing shifts in racial composition. These trends provide a comprehensive understanding of demographic patterns, enabling policymakers, educators, and researchers to analyze diversity and language learner populations across Oregon's school districts.
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+### Racial Composition and EL Student Enrollment Across Oregon (2009–2014)
 
 ```{r}
 map
